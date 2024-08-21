@@ -2,6 +2,7 @@ import chalk from 'chalk';
 import readlineSync from 'readline-sync';
 
 let logs = []; // 각종 로그 출력
+let stage = 1; // 스테이지
 
 function rand(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -12,34 +13,28 @@ function attackSuccess(attackRating) {
 }
 
 class Weapon {
-    constructor() {
-
+    constructor(owner) {
+        this.owner = owner;
     }
 
-    WeaponAttack(monster) {
-
-        logs.push(chalk.green(`${this.name}으로 몬스터를 공격합니다.`));
-
-        if (attackSuccess(this.attackRating))
-        {            
+    WeaponAttack(target) {
+        if (attackSuccess(this.attackRating)) {
             let damagePoint = rand(this.minAttackPoint, this.maxAttackPoint);
-            logs.push(chalk.green(`공격 성공! ${monster.name}에게 ${damagePoint}의 피해를 입혔습니다.`));
+            logs.push(chalk.green(`[${stage}] ${this.owner.name} 공격 성공! ${this.owner.name}가 ${target.name}에게 ${damagePoint}의 피해를 입혔습니다.\n`));
 
-            monster.OnDamage(damagePoint);
+            target.OnDamage(damagePoint);
         }
-        else
-        {
-            logs.push(chalk.red(`공격이 빗나갔습니다.`));
-        }                
+        else {
+            logs.push(chalk.red(`[${stage}] ${this.owner.name}의 공격이 빗나갔습니다.\n`));
+        }
     }
 }
 
 class MaceWeapon extends Weapon {
 
-    constructor() {
-        super();
+    constructor(owner) {
+        super(owner);
 
-        this.weaponType = 1;
         this.name = "둔기";
         this.minAttackPoint = 1;
         this.maxAttackPoint = 10;
@@ -50,10 +45,9 @@ class MaceWeapon extends Weapon {
 
 class SwordWeapon extends Weapon {
 
-    constructor() {
-        super();
+    constructor(owner) {
+        super(owner);
 
-        this.weaponType = 2;
         this.name = "검";
         this.minAttackPoint = 10;
         this.maxAttackPoint = 30;
@@ -64,10 +58,9 @@ class SwordWeapon extends Weapon {
 
 class TwohandSwordWeapon extends Weapon {
 
-    constructor(weaponType) {
-        super();
+    constructor(owner) {
+        super(owner);
 
-        this.weaponType = 3;
         this.name = "대검";
         this.minAttackPoint = 50;
         this.maxAttackPoint = 100;
@@ -76,72 +69,77 @@ class TwohandSwordWeapon extends Weapon {
     }
 }
 
-
-class Player {
+class Creature {
     constructor() {
-        this.hp = 100;
-        this.defensePoint = 0;
-        this.criticalPoint = 0.6;
+        this.name = null;
         this.weapon = null;
-    }
-
-    attack(monster) {
-        // 플레이어의 공격
-        if (this.weapon != null) {
-            this.weapon.WeaponAttack(monster);                                    
-        }
+        this.inventory = [];
     }
 
     equipWeapon(weaponType) {
         switch (weaponType) {
             case '1':
-                this.weapon = new MaceWeapon();
+                this.weapon = new MaceWeapon(this);
                 break;
             case '2':
-                this.weapon = new SwordWeapon();
+                this.weapon = new SwordWeapon(this);
                 break;
             case '3':
-                this.weapon = new TwohandSwordWeapon();
+                this.weapon = new TwohandSwordWeapon(this);
                 break;
         }
-
-        logs.push(chalk.green(`\n${this.weapon.name}을/를 장착합니다.`));
     }
 
+    attack(target) {
+        if (this.weapon != null) {
+            this.weapon.WeaponAttack(target);
+        }
+    }   
+
     OnDamage(damagePoint) {
-        if (this.hp - damagePoint < 0)
-        {
+        if (this.hp - damagePoint < 0) {
             this.hp = 0;
         }
-        else
-        {
+        else {
             this.hp -= damagePoint;
         }
     }
 }
 
-class Monster {
+class Player extends Creature {
     constructor() {
+        super();
+
+        this.name = "플레이어";
+        this.hp = 1000;
+        this.defensePoint = 0;
+        this.criticalPoint = 0.6;        
+    }   
+}
+
+class Monster extends Creature {
+    constructor() {
+        super();
+        
         this.name = "자바스크립트";
-        this.hp = 100;
+        this.hp = 1000;
         this.defensePoint = 0;
         this.criticalPoint = 0.6;
-        this.weapon = null;
-    }
+        this.inventory.push(new MaceWeapon(this));
+        this.inventory.push(new SwordWeapon(this));
+        this.inventory.push(new TwohandSwordWeapon(this));     
+    } 
 
-    attack() {
-        // 몬스터의 공격
-    }
+    attack(target) {
+        let weaponChoiceNum = rand(0, 2);
 
-    OnDamage(damagePoint) {
-        if (this.hp - damagePoint < 0)
-        {
-            this.hp = 0;
+        if (this.inventory.length > 0) {
+            if (this.inventory[weaponChoiceNum] != null) {
+                this.weapon = this.inventory[weaponChoiceNum];                
+
+                this.weapon.WeaponAttack(target);
+            }            
         }
-        else
-        {
-            this.hp -= damagePoint;
-        }        
     }
 }
 
@@ -150,10 +148,10 @@ function displayStatus(stage, player, monster) {
     console.log(
         chalk.cyanBright(`| Stage: ${stage} `) +
         chalk.blueBright(
-            `| 플레이어 정보 | 체력 : ${player.hp}`,
+            `\n| 플레이어 정보 | 체력 : ${player.hp} 무기 : ${player.weapon.name} 공격력 : ${player.weapon.minAttackPoint} ~ ${player.weapon.maxAttackPoint} 명중률 : ${player.weapon.attackRating * 100}%`,
         ) +
         chalk.redBright(
-            `| 몬스터 정보 | 체력 : ${monster.hp}`,
+            `\n| 몬스터 정보 | 체력 : ${monster.hp}`,
         ),
     );
     console.log(chalk.magentaBright(`=====================\n`));
@@ -179,7 +177,7 @@ function weaponChoiceStage(player) {
     player.equipWeapon(weaponType);
 }
 
-const battle = async (stage, player, monster) => {    
+const battle = async (stage, player, monster) => {
 
     while (player.hp > 0) {
         console.clear();
@@ -192,11 +190,13 @@ const battle = async (stage, player, monster) => {
                 `\n1. 공격한다 2. 아무것도 하지않는다.`,
             ),
         );
-        const choice = readlineSync.question('선택 : ');        
+
+        const choice = readlineSync.question('선택 : ');
 
         switch (choice) {
-            case '1':                
+            case '1':
                 player.attack(monster);
+                monster.attack(player);
                 break;
             case '2':
                 break;
@@ -208,14 +208,12 @@ const battle = async (stage, player, monster) => {
 export async function startGame() {
     console.clear();
 
-    const player = new Player();
+    let player = new Player();
 
-    weaponChoiceStage(player);
-
-    let stage = 1;
+    weaponChoiceStage(player);    
 
     while (stage <= 10) {
-        const monster = new Monster(stage);
+        let monster = new Monster(stage);
         await battle(stage, player, monster);
 
         // 스테이지 클리어 및 게임 종료 조건
