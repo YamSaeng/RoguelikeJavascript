@@ -1,6 +1,10 @@
 import chalk from 'chalk';
 import readlineSync from 'readline-sync';
 
+function rand(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
 class Player {
     constructor() {
         this.hp = 100;
