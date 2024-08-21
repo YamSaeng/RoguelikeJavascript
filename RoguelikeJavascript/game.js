@@ -5,6 +5,46 @@ function rand(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+class Weapon {    
+    constructor(weaponType) {
+        this.weaponType = weaponType;        
+    }
+
+    WeaponAttack() {
+        console.log(`${this.name}으로 공격을 시도 합니다.`);
+    }
+}
+
+class MaceWeapon extends Weapon {
+
+    constructor() {
+        super();
+
+        this.weaponType = 1;
+        this.name = "둔기";
+    }   
+}
+
+class SwordWeapon extends Weapon {
+
+    constructor() {
+        super();
+
+        this.weaponType = 2;
+        this.name = "검";
+    }  
+}
+
+class TwohandWeapon extends Weapon {
+    constructor(weaponType) {
+        super();
+
+        this.weaponType = 3;
+        this.name = "대검";
+    }
+}
+
+
 class Player {
     constructor() {
         this.hp = 100;
