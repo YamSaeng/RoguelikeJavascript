@@ -22,6 +22,9 @@ class MaceWeapon extends Weapon {
 
         this.weaponType = 1;
         this.name = "둔기";
+        this.minAttackPoint = 1;
+        this.maxAttackPoint = 10;
+        this.attackRating = 0.9;
     }   
 }
 
@@ -32,6 +35,9 @@ class SwordWeapon extends Weapon {
 
         this.weaponType = 2;
         this.name = "검";
+        this.minAttackPoint = 10;
+        this.maxAttackPoint = 30;
+        this.attackRating = 0.6;
     }  
 }
 
@@ -41,6 +47,9 @@ class TwohandWeapon extends Weapon {
 
         this.weaponType = 3;
         this.name = "대검";
+        this.minAttackPoint = 50;
+        this.maxAttackPoint = 100;
+        this.attackRating = 0.2;
     }
 }
 
@@ -48,9 +57,12 @@ class TwohandWeapon extends Weapon {
 class Player {
     constructor() {
         this.hp = 100;
+        this.defensePoint = 0;        
+        this.criticalPoint = 0.6;
+        this.weapon = null;
     }
 
-    attack() {
+    attack() {        
         // 플레이어의 공격
     }
 }
@@ -58,6 +70,9 @@ class Player {
 class Monster {
     constructor() {
         this.hp = 100;
+        this.defensePoint = 0;
+        this.criticalPoint = 0.6;
+        this.weapon = null;
     }
 
     attack() {
@@ -93,10 +108,10 @@ const battle = async (stage, player, monster) => {
                 `\n1. 공격한다 2. 아무것도 하지않는다.`,
             ),
         );
-        const choice = readlineSync.question('당신의 선택은? ');
+        const choice = readlineSync.question('당신의 선택은? ');        
 
         // 플레이어의 선택에 따라 다음 행동 처리
-        logs.push(chalk.green(`${choice}를 선택하셨습니다.`));
+        logs.push(chalk.green(`${choice}를 선택하셨습니다.`));        
     }
 
 };
