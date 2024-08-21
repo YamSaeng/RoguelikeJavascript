@@ -6,8 +6,8 @@ function rand(min, max) {
 }
 
 class Weapon {    
-    constructor(weaponType) {
-        this.weaponType = weaponType;        
+    constructor() {
+        
     }
 
     WeaponAttack() {
@@ -41,7 +41,8 @@ class SwordWeapon extends Weapon {
     }  
 }
 
-class TwohandWeapon extends Weapon {
+class TwohandSwordWeapon extends Weapon {
+
     constructor(weaponType) {
         super();
 
@@ -64,6 +65,25 @@ class Player {
 
     attack() {        
         // 플레이어의 공격
+    }
+
+    equipWeapon(weaponType)
+    {
+        switch (weaponType)
+        {
+            case '1':
+                this.weapon = new MaceWeapon();
+                break;
+            case '2':
+                this.weapon = new SwordWeapon();
+                break;
+            case '3':
+                this.weapon = new TwohandSwordWeapon();
+                break;             
+        }
+
+        console.log(chalk.green(`\n${this.weapon.name}을/를 장착합니다.`),
+        );
     }
 }
 
@@ -94,6 +114,26 @@ function displayStatus(stage, player, monster) {
     console.log(chalk.magentaBright(`=====================\n`));
 }
 
+function weaponChoiceStage(player) {
+    console.log(
+        chalk.green(
+            `\n무기를 선택하세요.`,
+        ),
+    );
+
+    console.log(
+        chalk.green(
+            `\n1.둔기 ( 낮은 데미지, 명중률이 높음, 일정 확률로 상대방을 기절)
+             \n2.검 ( 평균 데미지, 명중률이 중간, 일정 확률로 두번 공격)
+             \n3.대검 ( 높은 데미지, 명중률이 낮음, 일정 확률로 상대방을 출혈)`,
+        ),
+    );
+
+    let weaponType = readlineSync.question('선택 : ');
+
+    player.equipWeapon(weaponType);
+}
+
 const battle = async (stage, player, monster) => {
     let logs = [];
 
@@ -118,7 +158,11 @@ const battle = async (stage, player, monster) => {
 
 export async function startGame() {
     console.clear();
+
     const player = new Player();
+
+    weaponChoiceStage(player);
+
     let stage = 1;
 
     while (stage <= 10) {
