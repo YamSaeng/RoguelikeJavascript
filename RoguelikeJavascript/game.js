@@ -5,6 +5,8 @@ let logs = []; // 각종 로그 출력
 let stage = 1; // 스테이지
 let gameEnd = false;
 
+let battleTurn = 1;
+
 const DEFENCE_OFF = 0;
 const DEFENCE_ON = 1;
 
@@ -27,24 +29,24 @@ class Weapon {
                 target.defenceState = DEFENCE_OFF;
 
                 if (RatingSuccess(target.defenceRating)) { // 상대방의 방어 확률에 따라 방어
-                    logs.push(chalk.yellow(`${target.name}가 ${this.owner.name}의 공격을 방어했습니다.`));
+                    logs.push(chalk.yellow(`[${battleTurn}] ${target.name}가 ${this.owner.name}의 공격을 방어했습니다.`));
 
                     return false;
                 }
                 else
                 {
-                    logs.push(chalk.yellow(`${target.name}가 ${this.owner.name}의 공격을 방어하지 못했습니다.`));
+                    logs.push(chalk.yellow(`[${battleTurn}] ${target.name}가 ${this.owner.name}의 공격을 방어하지 못했습니다.`));
                 }
             }
 
             let damagePoint = rand(this.minAttackPoint + this.owner.attackPoint, this.maxAttackPoint + this.owner.attackPoint);
             let finalDamagePoint = Math.floor(damagePoint - damagePoint * target.defensePoint);
-            logs.push(chalk.green(`[${stage}] ${this.owner.name} 공격 성공! ${this.owner.name}가 ${target.name}에게 ${finalDamagePoint} 의 피해를 입혔습니다.\n`));
+            logs.push(chalk.green(`[${battleTurn}] ${this.owner.name} 공격 성공! ${this.owner.name}가 ${target.name}에게 ${finalDamagePoint} 의 피해를 입혔습니다.`));
 
             return target.OnDamage(finalDamagePoint);   
         }
         else {
-            logs.push(chalk.red(`[${stage}] ${this.owner.name}의 공격이 빗나갔습니다.\n`));
+            logs.push(chalk.red(`[${battleTurn}] ${this.owner.name}의 공격이 빗나갔습니다.`));
 
             return false;
         }
@@ -143,8 +145,8 @@ class Creature {
     }
 
     StatusUpdate(stage) {
-        this.hp += Math.floor(this.hp * this.recovoryHP) + 2 * stage;
-        this.attackPoint += (2 * stage);
+        this.hp += Math.floor(this.hp * this.recovoryHP) + (rand(1,3) * stage);
+        this.attackPoint += (rand(1,3) * stage);
 
         this.recovoryHP += this.bonusRecovoryHP;
     }
@@ -179,7 +181,7 @@ class Monster extends Creature {
             if (this.inventory[weaponChoiceNum] != null) {
                 this.weapon = this.inventory[weaponChoiceNum];                
 
-                logs.push(chalk.yellow(`${this.name}가 ${this.weapon.name}을 장착했습니다.`));
+                logs.push(chalk.yellow(`[${battleTurn}] ${this.name}가 ${this.weapon.name}을 장착했습니다.`));
 
                 return this.weapon.WeaponAttack(target);                
             }            
@@ -229,15 +231,11 @@ const battle = async (stage, player, monster) => {
 
     let battleEnd = false
 
-    while (!battleEnd) {
+    while (!battleEnd && !gameEnd) {
         console.clear();
         displayStatus(stage, player, monster);
 
-        logs.forEach((log) => console.log(log));
-
-        if (battleEnd || gameEnd) {
-            break;
-        }
+        logs.forEach((log) => console.log(log));        
 
         console.log(
             chalk.blue(
@@ -280,7 +278,11 @@ const battle = async (stage, player, monster) => {
             logs.push(chalk.redBright(`플레이어가 죽었습니다. 게임을 종료합니다.`));
             gameEnd = true;
         }
+
+        battleTurn++;
     } 
+
+    battleTurn = 1;    
 };
 
 export async function startGame() {
@@ -293,7 +295,7 @@ export async function startGame() {
     
     while (stage <= 10 && gameEnd == false) {
         let monster = new Monster(stage);
-        monster.StatusUpdate(stage);
+        monster.StatusUpdate(stage);                
 
         logs.push(chalk.blueBright(`스테이지 [${stage}] 에 입장합니다. \n`));
         await battle(stage, player, monster);        
