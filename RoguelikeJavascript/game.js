@@ -158,9 +158,14 @@ function displayStatus(stage, player, monster) {
             `\n| 플레이어 정보 | 체력 : ${player.hp} 무기 : ${player.weapon.name} 공격력 : ${player.weapon.minAttackPoint} ~ ${player.weapon.maxAttackPoint} 명중률 : ${player.weapon.attackRating * 100}%`,
         ) +
         chalk.redBright(
-            `\n| 몬스터 정보 | 체력 : ${monster.hp}`,
-        ),
+            `\n| 몬스터 정보 | 체력 : ${monster.hp} `,
+        ),        
     );
+
+    if (monster.weapon != null) {
+        console.log(chalk.redBright(`무기 : ${monster.weapon.name} 공격력 : ${monster.weapon.minAttackPoint} ~ ${monster.weapon.maxAttackPoint} 명중률 : ${monster.weapon.attackRating * 100}% \n`));
+    }
+
     console.log(chalk.magentaBright(`=====================\n`));
 }
 
