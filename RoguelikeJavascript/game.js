@@ -5,11 +5,14 @@ let logs = []; // 각종 로그 출력
 let stage = 1; // 스테이지
 let gameEnd = false;
 
+const DEFENCE_OFF = 0;
+const DEFENCE_ON = 1;
+
 function rand(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-function attackSuccess(attackRating) {
+function RatingSuccess(attackRating) {
     return Math.random() < attackRating;
 }
 
@@ -19,12 +22,26 @@ class Weapon {
     }
 
     WeaponAttack(target) {
-        if (attackSuccess(this.attackRating)) {
-            let damagePoint = rand(this.minAttackPoint + owner.attackPoint, this.maxAttackPoint + owner.attackPoint);
+        if (RatingSuccess(this.attackRating)) {          
+            if (target.defenceState == DEFENCE_ON) {
+                target.defenceState = DEFENCE_OFF;
+
+                if (RatingSuccess(target.defenceRating)) { // 상대방의 방어 확률에 따라 방어
+                    logs.push(chalk.yellow(`${target.name}가 ${this.owner.name}의 공격을 방어했습니다.`));
+
+                    return false;
+                }
+                else
+                {
+                    logs.push(chalk.yellow(`${target.name}가 ${this.owner.name}의 공격을 방어하지 못했습니다.`));
+                }
+            }
+
+            let damagePoint = rand(this.minAttackPoint + this.owner.attackPoint, this.maxAttackPoint + this.owner.attackPoint);
             let finalDamagePoint = Math.floor(damagePoint - damagePoint * target.defensePoint);
             logs.push(chalk.green(`[${stage}] ${this.owner.name} 공격 성공! ${this.owner.name}가 ${target.name}에게 ${finalDamagePoint} 의 피해를 입혔습니다.\n`));
 
-            return target.OnDamage(finalDamagePoint);
+            return target.OnDamage(finalDamagePoint);   
         }
         else {
             logs.push(chalk.red(`[${stage}] ${this.owner.name}의 공격이 빗나갔습니다.\n`));
@@ -78,6 +95,9 @@ class Creature {
         this.bonusHP = 30;
         this.bonusRecovoryHP = 0.02;
 
+        this.defenceState = DEFENCE_OFF;      
+        this.defenceRating = 0.4;
+
         this.attackPoint = 1;
         this.recovoryHP = 0.2;
         this.name = null;
@@ -104,6 +124,10 @@ class Creature {
             return this.weapon.WeaponAttack(target);
         }
     }   
+
+    defence() {
+        this.defenceState = DEFENCE_ON;
+    }
 
     OnDamage(damagePoint) {
         if (this.hp - damagePoint < 0) {
@@ -169,14 +193,13 @@ function displayStatus(stage, player, monster) {
         chalk.cyanBright(`| Stage: ${stage} `) +
         chalk.blueBright(
             `\n| 플레이어 정보 | 체력 : ${player.hp} 무기 : ${player.weapon.name} 공격력 : ${player.weapon.minAttackPoint} ~ ${player.weapon.maxAttackPoint} 명중률 : ${player.weapon.attackRating * 100}%`,
-        ) +
-        chalk.redBright(
-            `\n| 몬스터 정보 | 체력 : ${monster.hp} `,
-        ),        
+        )      
     );
+    
+    console.log(chalk.redBright(`\n| 몬스터 정보 | 체력 : ${monster.hp}`));
 
     if (monster.weapon != null) {
-        console.log(chalk.redBright(`무기 : ${monster.weapon.name} 공격력 : ${monster.weapon.minAttackPoint} ~ ${monster.weapon.maxAttackPoint} 명중률 : ${monster.weapon.attackRating * 100}% \n`));
+        console.log(chalk.redBright(`몬스터 무기 : ${monster.weapon.name} 공격력 : ${monster.weapon.minAttackPoint} ~ ${monster.weapon.maxAttackPoint} 명중률 : ${monster.weapon.attackRating * 100}% \n`));
     }
 
     console.log(chalk.magentaBright(`=====================\n`));
@@ -218,34 +241,45 @@ const battle = async (stage, player, monster) => {
 
         console.log(
             chalk.blue(
-                `\n1. 공격한다 2. 도망친다.`,
+                `\n1. 공격 2. 방어 (40%) 3. 도망 (40%)`,
             ),
         );
 
         const choice = readlineSync.question('선택 : ');
 
+        let playerDead = false;
+        let monsterDead = false;
+
         switch (choice) {
             case '1':
-                let monsterDead = player.attack(monster);
-                let playerDead = monster.attack(player);
-
-                if (monsterDead) {
-                    logs.push(chalk.blueBright(`몬스터를 죽였습니다.`)); 
-                    battleEnd = true;
-                }
-
-                if (playerDead) {
-                    logs.push(chalk.redBright(`플레이어가 죽었습니다. 게임을 종료합니다.`));                    
-                    gameEnd = true;
-                }
-
+                monsterDead = player.attack(monster);
+                playerDead = monster.attack(player);
                 break;
             case '2':
-                logs.push(chalk.green(`도망쳤습니다.`));                
-
-                battleEnd = true;
+                player.defence();
+                playerDead = monster.attack(player);
+                break;
+            case '3':                
+                if (RatingSuccess(0.4)) {
+                    logs.push(chalk.green(`도망쳤습니다.`));
+                    battleEnd = true;
+                }
+                else {
+                    logs.push(chalk.green(`도망치지 못했습니다.`));
+                }
+                
                 break;         
         }                        
+
+        if (monsterDead) {
+            logs.push(chalk.blueBright(`몬스터를 죽였습니다.`));
+            battleEnd = true;
+        }                
+
+        if (playerDead) {
+            logs.push(chalk.redBright(`플레이어가 죽었습니다. 게임을 종료합니다.`));
+            gameEnd = true;
+        }
     } 
 };
 
