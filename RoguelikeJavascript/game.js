@@ -3,6 +3,7 @@ import readlineSync from 'readline-sync';
 
 let logs = []; // 각종 로그 출력
 let stage = 1; // 스테이지
+let gameEnd = false;
 
 function rand(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -22,10 +23,12 @@ class Weapon {
             let damagePoint = rand(this.minAttackPoint, this.maxAttackPoint);
             logs.push(chalk.green(`[${stage}] ${this.owner.name} 공격 성공! ${this.owner.name}가 ${target.name}에게 ${damagePoint}의 피해를 입혔습니다.\n`));
 
-            target.OnDamage(damagePoint);
+            return target.OnDamage(damagePoint);
         }
         else {
             logs.push(chalk.red(`[${stage}] ${this.owner.name}의 공격이 빗나갔습니다.\n`));
+
+            return false;
         }
     }
 }
@@ -92,16 +95,20 @@ class Creature {
 
     attack(target) {
         if (this.weapon != null) {
-            this.weapon.WeaponAttack(target);
+            return this.weapon.WeaponAttack(target);
         }
     }   
 
     OnDamage(damagePoint) {
         if (this.hp - damagePoint < 0) {
             this.hp = 0;
+
+            return true;
         }
         else {
             this.hp -= damagePoint;
+
+            return false;
         }
     }
 }
@@ -111,7 +118,7 @@ class Player extends Creature {
         super();
 
         this.name = "플레이어";
-        this.hp = 1000;
+        this.hp = 100;
         this.defensePoint = 0;
         this.criticalPoint = 0.6;        
     }   
@@ -122,7 +129,7 @@ class Monster extends Creature {
         super();
         
         this.name = "자바스크립트";
-        this.hp = 1000;
+        this.hp = 100;
         this.defensePoint = 0;
         this.criticalPoint = 0.6;
         this.inventory.push(new MaceWeapon(this));
@@ -137,7 +144,7 @@ class Monster extends Creature {
             if (this.inventory[weaponChoiceNum] != null) {
                 this.weapon = this.inventory[weaponChoiceNum];                
 
-                this.weapon.WeaponAttack(target);
+                return this.weapon.WeaponAttack(target);                
             }            
         }
     }
@@ -179,15 +186,21 @@ function weaponChoiceStage(player) {
 
 const battle = async (stage, player, monster) => {
 
-    while (player.hp > 0) {
+    let battleEnd = false
+
+    while (!battleEnd) {
         console.clear();
         displayStatus(stage, player, monster);
 
         logs.forEach((log) => console.log(log));
 
+        if (battleEnd || gameEnd) {
+            break;
+        }
+
         console.log(
             chalk.blue(
-                `\n1. 공격한다 2. 아무것도 하지않는다.`,
+                `\n1. 공격한다 2. 도망친다.`,
             ),
         );
 
@@ -195,28 +208,41 @@ const battle = async (stage, player, monster) => {
 
         switch (choice) {
             case '1':
-                player.attack(monster);
-                monster.attack(player);
+                let monsterDead = player.attack(monster);
+                let playerDead = monster.attack(player);
+
+                if (monsterDead) {
+                    logs.push(chalk.blueBright(`몬스터를 죽였습니다.`)); 
+                    battleEnd = true;
+                }
+
+                if (playerDead) {
+                    logs.push(chalk.redBright(`플레이어가 죽었습니다. 게임을 종료합니다.`));                    
+                    gameEnd = true;
+                }
+
                 break;
             case '2':
-                break;
-        }
-    }
+                logs.push(chalk.green(`도망쳤습니다.`));                
 
+                battleEnd = true;
+                break;         
+        }                        
+    } 
 };
 
 export async function startGame() {
     console.clear();
-
+    
     let player = new Player();
 
     weaponChoiceStage(player);    
-
-    while (stage <= 10) {
+    
+    while (stage <= 10 && gameEnd == false) {
         let monster = new Monster(stage);
-        await battle(stage, player, monster);
 
-        // 스테이지 클리어 및 게임 종료 조건
+        logs.push(chalk.blueBright(`스테이지 [${stage}] 에 입장합니다. \n`));
+        await battle(stage, player, monster);        
 
         stage++;
     }
