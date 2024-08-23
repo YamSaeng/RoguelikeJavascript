@@ -4,6 +4,7 @@ import readlineSync from 'readline-sync';
 import { Player } from "./Creature/Player.js";
 import { Monster } from "./Creature/Monster.js";
 import { CLogs } from "./Logs/Logs.js"
+import { RatingSuccess } from "./Math/Math.js"
 
 let gLogs = new CLogs();
 
@@ -60,11 +61,11 @@ const battle = async (stage, player, monster) => {
         console.clear();
         displayStatus(stage, player, monster);
 
-        gLogs.printLogs();
+        Logs.printLogs();
         
         console.log(
             chalk.blue(
-                `\n1. 공격 2. 방어 (40%) 3. 도망 (40%)`,
+                `\n1. 공격 2. 방어 (40%) 3. 도망 (10%)`,
             ),
         );
 
@@ -83,24 +84,24 @@ const battle = async (stage, player, monster) => {
                 playerDead = monster.attack(battleTurn, player);
                 break;
             case '3':                
-                if (RatingSuccess(0.4)) {
-                    gLogs.logs = chalk.green(`도망쳤습니다.`);
+                if (RatingSuccess(0.1)) {
+                    Logs.logs = chalk.green(`도망쳤습니다.`);
                     battleEnd = true;
                 }
                 else {
-                    gLogs.logs = chalk.green(`도망치지 못했습니다.`);
+                    Logs.logs = chalk.green(`도망치지 못했습니다.`);
                 }
                 
                 break;         
         }                        
 
         if (monsterDead) {
-            gLogs.logs = chalk.blueBright(`몬스터를 죽였습니다.`);
+            Logs.logs = chalk.blueBright(`몬스터를 죽였습니다.`);
             battleEnd = true;
         }                
 
         if (playerDead) {
-            gLogs.logs = chalk.redBright(`플레이어가 죽었습니다. 게임을 종료합니다.`);
+            console.log(chalk.redBright(`플레이어가 죽었습니다. 게임을 종료합니다.`));            
             gameEnd = true;
         }
 
@@ -131,4 +132,8 @@ export async function startGame() {
 
         stage++;
     }
+
+    console.log(chalk.greenBright("\n============================================"));
+    console.log(chalk.greenBright("모든 스테이지를 클리어 했습니다. 축하합니다!"));
+    console.log(chalk.greenBright("============================================"));
 }
