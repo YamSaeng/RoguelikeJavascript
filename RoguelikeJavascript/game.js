@@ -73,7 +73,7 @@ const battle = async (stage, player, monster) => {
 
         let playerDead = false;
         let monsterDead = false;
-
+        
         switch (choice) {
             case '1':
                 monsterDead = player.attack(battleTurn, monster);
@@ -93,7 +93,10 @@ const battle = async (stage, player, monster) => {
                 }
                 
                 break;         
-        }                        
+        }                 
+
+        player.Update(battleTurn);
+        monster.Update(battleTurn);
 
         if (monsterDead) {
             Logs.logs = chalk.blueBright(`몬스터를 죽였습니다.`);

@@ -4,8 +4,16 @@ import { CSwordWeapon } from "../Weapon/SwordWeapon.js"
 import { CTwohandSwordWeapon } from "../Weapon/TwoHandSwordWeapon.js"
 import { rand } from "../Math/Math.js"
 
+import { CLogs } from "../Logs/Logs.js"
+
 const DEFENCE_OFF = 0;
 const DEFENCE_ON = 1;
+
+const STATUS_EFFECT_NONE = 0;
+const STATUS_EFFECT_RESERVE_STUN = 1;
+const STATUS_EFFECT_STUN = 2;
+const STATUS_EFFECT_RESERVE_BLEEDING = 3;
+const STATUS_EFFECT_BLEEDING = 4;
 
 export class Creature {
     constructor() {
@@ -65,8 +73,23 @@ export class Creature {
         this.hp += Math.floor(this.hp * this.recovoryHP) + (rand(1, 3) * stage);
         this.attackPoint += (rand(1, 3) * stage);
 
-        this.recovoryHP += this.bonusRecovoryHP;
+        this.recovoryHP += this.bonusRecovoryHP;        
 
-        this.statusEffectCount = 0;
+        this.statusEffect.StatusInit();
+    }
+
+    Update(battleTurn) {
+        let Logs = CLogs.getInstance();
+
+        switch (this.statusEffect.Effect) {
+            case STATUS_EFFECT_RESERVE_STUN:
+            case STATUS_EFFECT_RESERVE_BLEEDING:
+                this.statusEffect.Start(battleTurn);
+                break;
+            case STATUS_EFFECT_STUN:
+            case STATUS_EFFECT_BLEEDING:
+                this.statusEffect.Update(battleTurn);
+                break;
+        }
     }
 }

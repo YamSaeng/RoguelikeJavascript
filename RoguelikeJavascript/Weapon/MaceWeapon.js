@@ -12,6 +12,6 @@ export class CMaceWeapon extends CWeapon {
         this.minAttackPoint = 10;
         this.maxAttackPoint = 30;
         this.attackRating = 0.8;
-        this.statusEffectRating = 0.4;
+        this.statusEffectRating = 0.2;
     }
 }
