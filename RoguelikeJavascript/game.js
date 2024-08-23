@@ -20,7 +20,7 @@ class Weapon {
 
     WeaponAttack(target) {
         if (attackSuccess(this.attackRating)) {
-            let damagePoint = rand(this.minAttackPoint, this.maxAttackPoint);
+            let damagePoint = rand(this.minAttackPoint + owner.attackPoint, this.maxAttackPoint + owner.attackPoint);
             let finalDamagePoint = Math.floor(damagePoint - damagePoint * target.defensePoint);
             logs.push(chalk.green(`[${stage}] ${this.owner.name} 공격 성공! ${this.owner.name}가 ${target.name}에게 ${finalDamagePoint} 의 피해를 입혔습니다.\n`));
 
@@ -78,6 +78,7 @@ class Creature {
         this.bonusHP = 30;
         this.bonusRecovoryHP = 0.02;
 
+        this.attackPoint = 1;
         this.recovoryHP = 0.2;
         this.name = null;
         this.weapon = null;
@@ -118,7 +119,9 @@ class Creature {
     }
 
     StatusUpdate(stage) {
-        this.hp = this.hp + Math.floor(this.hp * this.recovoryHP) + 2 * stage;
+        this.hp += Math.floor(this.hp * this.recovoryHP) + 2 * stage;
+        this.attackPoint += (2 * stage);
+
         this.recovoryHP += this.bonusRecovoryHP;
     }
 }
