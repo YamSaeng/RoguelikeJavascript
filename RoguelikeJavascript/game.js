@@ -21,9 +21,10 @@ class Weapon {
     WeaponAttack(target) {
         if (attackSuccess(this.attackRating)) {
             let damagePoint = rand(this.minAttackPoint, this.maxAttackPoint);
-            logs.push(chalk.green(`[${stage}] ${this.owner.name} 공격 성공! ${this.owner.name}가 ${target.name}에게 ${damagePoint}의 피해를 입혔습니다.\n`));
+            let finalDamagePoint = Math.floor(damagePoint - damagePoint * target.defensePoint);
+            logs.push(chalk.green(`[${stage}] ${this.owner.name} 공격 성공! ${this.owner.name}가 ${target.name}에게 ${finalDamagePoint} 의 피해를 입혔습니다.\n`));
 
-            return target.OnDamage(damagePoint);
+            return target.OnDamage(finalDamagePoint);
         }
         else {
             logs.push(chalk.red(`[${stage}] ${this.owner.name}의 공격이 빗나갔습니다.\n`));
@@ -39,8 +40,8 @@ class MaceWeapon extends Weapon {
         super(owner);
 
         this.name = "둔기";
-        this.minAttackPoint = 1;
-        this.maxAttackPoint = 10;
+        this.minAttackPoint = 10;
+        this.maxAttackPoint = 30;
         this.attackRating = 0.8;
         this.stunRating = 0.4;
     }
@@ -52,8 +53,8 @@ class SwordWeapon extends Weapon {
         super(owner);
 
         this.name = "검";
-        this.minAttackPoint = 10;
-        this.maxAttackPoint = 30;
+        this.minAttackPoint = 40;
+        this.maxAttackPoint = 60;
         this.attackRating = 0.6;
         this.doubleAttackRating = 0.5;
     }
@@ -65,15 +66,19 @@ class TwohandSwordWeapon extends Weapon {
         super(owner);
 
         this.name = "대검";
-        this.minAttackPoint = 50;
-        this.maxAttackPoint = 100;
-        this.attackRating = 0.3;
+        this.minAttackPoint = 70;
+        this.maxAttackPoint = 90;
+        this.attackRating = 0.2;
         this.bleedingRating = 0.6;
     }
 }
 
 class Creature {
     constructor() {
+        this.bonusHP = 30;
+        this.bonusRecovoryHP = 0.02;
+
+        this.recovoryHP = 0.2;
         this.name = null;
         this.weapon = null;
         this.inventory = [];
@@ -111,6 +116,11 @@ class Creature {
             return false;
         }
     }
+
+    StatusUpdate(stage) {
+        this.hp = this.hp + Math.floor(this.hp * this.recovoryHP) + 2 * stage;
+        this.recovoryHP += this.bonusRecovoryHP;
+    }
 }
 
 class Player extends Creature {
@@ -118,9 +128,8 @@ class Player extends Creature {
         super();
 
         this.name = "플레이어";
-        this.hp = 100;
-        this.defensePoint = 0;
-        this.criticalPoint = 0.6;        
+        this.hp = 250;
+        this.defensePoint = 0.5;                     
     }   
 }
 
@@ -130,8 +139,7 @@ class Monster extends Creature {
         
         this.name = "자바스크립트";
         this.hp = 100;
-        this.defensePoint = 0;
-        this.criticalPoint = 0.6;
+        this.defensePoint = 0.1;        
         this.inventory.push(new MaceWeapon(this));
         this.inventory.push(new SwordWeapon(this));
         this.inventory.push(new TwohandSwordWeapon(this));     
@@ -143,6 +151,8 @@ class Monster extends Creature {
         if (this.inventory.length > 0) {
             if (this.inventory[weaponChoiceNum] != null) {
                 this.weapon = this.inventory[weaponChoiceNum];                
+
+                logs.push(chalk.yellow(`${this.name}가 ${this.weapon.name}을 장착했습니다.`));
 
                 return this.weapon.WeaponAttack(target);                
             }            
@@ -241,13 +251,17 @@ export async function startGame() {
     
     let player = new Player();
 
+    // 플레이어 무기 선택
     weaponChoiceStage(player);    
     
     while (stage <= 10 && gameEnd == false) {
         let monster = new Monster(stage);
+        monster.StatusUpdate(stage);
 
         logs.push(chalk.blueBright(`스테이지 [${stage}] 에 입장합니다. \n`));
         await battle(stage, player, monster);        
+
+        player.StatusUpdate(stage);
 
         stage++;
     }
