@@ -13,15 +13,17 @@ let gameEnd = false;
 
 let battleTurn = 1;
 
+const STATUS_EFFECT_STUN = 2;
+
 function displayStatus(stage, player, monster) {
     console.log(chalk.magentaBright(`\n=== Current Status ===`));
     console.log(
         chalk.cyanBright(`| Stage: ${stage} `) +
         chalk.blueBright(
             `\n| 플레이어 정보 | 체력 : ${player.hp} 무기 : ${player.weapon.name} 공격력 : ${player.weapon.minAttackPoint} ~ ${player.weapon.maxAttackPoint} 명중률 : ${player.weapon.attackRating * 100}%`,
-        )      
+        )
     );
-    
+
     console.log(chalk.redBright(`\n| 몬스터 정보 | 체력 : ${monster.hp}`));
 
     if (monster.weapon != null) {
@@ -53,7 +55,7 @@ function weaponChoiceStage(player) {
 
 const battle = async (stage, player, monster) => {
 
-    let Logs = CLogs.getInstance(); 
+    let Logs = CLogs.getInstance();
 
     let battleEnd = false
 
@@ -62,7 +64,7 @@ const battle = async (stage, player, monster) => {
         displayStatus(stage, player, monster);
 
         Logs.printLogs();
-        
+
         console.log(
             chalk.blue(
                 `\n1. 공격 2. 방어 (40%) 3. 도망 (10%)`,
@@ -73,7 +75,7 @@ const battle = async (stage, player, monster) => {
 
         let playerDead = false;
         let monsterDead = false;
-        
+
         switch (choice) {
             case '1':
                 monsterDead = player.attack(battleTurn, monster);
@@ -83,17 +85,24 @@ const battle = async (stage, player, monster) => {
                 player.defence();
                 playerDead = monster.attack(battleTurn, player);
                 break;
-            case '3':                
-                if (RatingSuccess(0.1)) {
-                    Logs.logs = chalk.green(`도망쳤습니다.`);
-                    battleEnd = true;
+            case '3':
+                if (player.statusEffect.Effect != STATUS_EFFECT_STUN) {
+                    if (RatingSuccess(0.1)) {
+                        Logs.logs = chalk.green(`도망쳤습니다.`);
+                        battleEnd = true;
+                    }
+                    else {
+                        Logs.logs = chalk.green(`도망치지 못했습니다.`);
+                        playerDead = monster.attack(battleTurn, player);
+                    }
                 }
                 else {
-                    Logs.logs = chalk.green(`도망치지 못했습니다.`);
-                }
-                
-                break;         
-        }                 
+                    Logs.logs = chalk.cyanBright(`[${player.name}]가 기절 상태이상에 걸려 도망칠 수 없습니다.`);
+                    playerDead = monster.attack(battleTurn, player);
+                }                                
+
+                break;
+        }
 
         player.Update(battleTurn);
         monster.Update(battleTurn);
@@ -101,35 +110,35 @@ const battle = async (stage, player, monster) => {
         if (monsterDead) {
             Logs.logs = chalk.blueBright(`몬스터를 죽였습니다.`);
             battleEnd = true;
-        }                
+        }
 
         if (playerDead) {
-            console.log(chalk.redBright(`플레이어가 죽었습니다. 게임을 종료합니다.`));            
+            console.log(chalk.redBright(`플레이어가 죽었습니다. 게임을 종료합니다.`));
             gameEnd = true;
         }
 
         battleTurn++;
-    } 
+    }
 
-    battleTurn = 1;    
+    battleTurn = 1;
 };
 
 export async function startGame() {
     console.clear();
-    
+
     let player = new Player();
 
     // 플레이어 무기 선택
-    weaponChoiceStage(player);    
-    
+    weaponChoiceStage(player);
+
     while (stage <= 10 && gameEnd == false) {
         let monster = new Monster(stage);
-        monster.StatusUpdate(stage);                
+        monster.StatusUpdate(stage);
 
-        let Logs = CLogs.getInstance();   
+        let Logs = CLogs.getInstance();
         Logs.logs = chalk.blueBright(`스테이지 [${stage}] 에 입장합니다. \n`);
 
-        await battle(stage, player, monster);        
+        await battle(stage, player, monster);
 
         player.StatusUpdate(stage);
 
