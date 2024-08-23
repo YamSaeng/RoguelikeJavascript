@@ -29,10 +29,27 @@
   </PropertyGroup>
   <ItemGroup>
     <Content Include=".prettierrc.json" />
+    <Content Include="Creature\Creature.js" />
+    <Content Include="Creature\Monster.js" />
     <Content Include="game.js" />
+    <Content Include="Logs\Logs.js" />
+    <Content Include="Math\Math.js" />
     <Content Include="package.json" />
+    <Content Include="Creature\Player.js" />
     <Content Include="README.md" />
     <Content Include="server.js" />
+    <Content Include="StatusEffect\StatusEffect.js" />
+    <Content Include="Weapon\MaceWeapon.js" />
+    <Content Include="Weapon\SwordWeapon.js" />
+    <Content Include="Weapon\TwoHandSwordWeapon.js" />
+    <Content Include="Weapon\Weapon.js" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Creature\" />
+    <Folder Include="Logs\" />
+    <Folder Include="Math\" />
+    <Folder Include="Weapon\" />
+    <Folder Include="StatusEffect\" />
   </ItemGroup>
   <Import Project="$(VSToolsPath)\Node.js Tools\Microsoft.NodejsToolsV2.targets" />
 </Project>
