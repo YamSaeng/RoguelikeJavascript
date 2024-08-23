@@ -66,6 +66,9 @@ export class CWeapon {
                                 break;
                             case WEAPON_SWORD:
                                 target.OnDamage(finalDamagePoint)
+
+                                Logs.logs = chalk.magenta(`[${battleTurn}] ${target.name}에게 연속 공격!!`);
+                                Logs.logs = chalk.green(`[${battleTurn}] ${this.owner.name} 공격 성공! ${this.owner.name}가 ${target.name}에게 ${finalDamagePoint} 의 피해를 입혔습니다.`);                                
                                 break;
                             case WEAPON_TWO_HAND_SWORD:
                                 Logs.logs = chalk.magenta(`[${battleTurn}] ${target.name}에게 출혈 상태이상 적용.`);
